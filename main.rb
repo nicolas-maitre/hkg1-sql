@@ -2,8 +2,6 @@ require 'open-uri'
 require 'pp'
 require_relative './uri_encode_component'
 
-USER_ID = ARGV[0] || 1
-
 def guess_val min = 0, max = nil
     current_min, current_max = fast_min_max_val(min,max){|val| yield val}
     # puts "#{current_min} #{current_max}"
@@ -61,7 +59,7 @@ def display_table lines, headers
     lines.unshift headers if headers
     #col widths
     col_widths = lines.first.each_with_index.map do |_, col_ind|
-        lines.reduce(0){|acc, line| ((line[col_ind].length > acc) ? line[col_ind].length : acc)} + 1
+        lines.reduce(0){|acc, line| ((line[col_ind].to_s.length > acc) ? line[col_ind].to_s.length : acc)} + 1
     end
     width = col_widths.reduce(1){|acc, col_length| acc + col_length + 2}
     #display
@@ -77,7 +75,9 @@ def display_table lines, headers
 end
 
 #exec
-USER_IDS = (1..5)
+lower = ARGV[0] ? ARGV[0].to_i : 1
+upper = ARGV[1] ? ARGV[1].to_i : lower
+USER_IDS = (lower..upper)
 TABLE_FIELDS = ['firstname', 'lastname', 'email', 'password']
 
 dump_data = USER_IDS.each_with_index.map do |user_id, user_ind|
@@ -85,9 +85,9 @@ dump_data = USER_IDS.each_with_index.map do |user_id, user_ind|
         puts
         puts "#{user_ind * TABLE_FIELDS.length + field_ind + 1} of #{USER_IDS.count * TABLE_FIELDS.length}"
         guess_field user_id, table_field
-    end
+    end.unshift(user_id) #bricolo id
 end
 puts
-display_table dump_data, TABLE_FIELDS
+display_table dump_data, TABLE_FIELDS.unshift('id') #bricolo id
 
 puts "with #{@request_count} requests";
