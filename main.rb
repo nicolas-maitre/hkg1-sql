@@ -1,3 +1,7 @@
+#PARAMS 
+#argv1: lower id
+#argv2: upper id
+
 require 'open-uri'
 require 'pp'
 require_relative './uri_encode_component'
@@ -75,8 +79,10 @@ def display_table lines, headers
 end
 
 #exec
-lower = ARGV[0] ? ARGV[0].to_i : 1
-upper = ARGV[1] ? ARGV[1].to_i : lower
+MIN_ID = 1
+MAX_ID = 3
+lower = ARGV[0] ? ARGV[0].to_i : MIN_ID
+upper = ARGV[1] ? ARGV[1].to_i : (ARGV[0] ? lower : MAX_ID)
 USER_IDS = (lower..upper)
 TABLE_FIELDS = ['firstname', 'lastname', 'email', 'password']
 
